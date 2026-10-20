@@ -1,5 +1,6 @@
 import main
 from pathlib import Path
+import shutil
 
 def load_files(data_link):
 
@@ -34,10 +35,15 @@ def load_files(data_link):
 
     return list_of_files
 
-def save_files(path_to_change):
+def save_files(move_instructions: list):
 
-    
+    for action in move_instructions:
+        src_path = Path(action["src"])
+        dest_path = Path(action["dest"])
 
+        dest_path.parent.mkdir(parents = True, exist_ok = True)
 
+        shutil.move(str(src_path), str(dest_path))
 
+    return True
 
