@@ -1,4 +1,4 @@
-import main.py
+import main
 from pathlib import Path
 
 def load_files(data_link):
