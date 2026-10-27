@@ -1,54 +1,47 @@
-import data.py
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import data
+import logic
 
+app = FastAPI(title = "Smart Downloads Organizer API.")
 path = input("Enter the path:")
 
 data = data.load_files(path)
 
-while True:
-    print("Functionalities:")
+class OrganizerRequest(BaseModel):
+    path : str
 
-    print("1. Inspect files.")
-    print("2. Organize files.")
-    print("3. Find duplicates.")
+@app.get("/inspect")
+def inspect_files(path: str):
+    file_data = data.load_files(path)
 
-    func = int(input("Enter the functionality:"))
-
-    if func == 1:
-
-        print("---Inspection Report---")
-
-        report = logic.inspect_file(data)
-
-        for ext, count in report.items():
-            print(f"Extension: {ext.upper()} | Total Files: {count}")
-
-    elif func == 2:
-
-        print("\n---Organizing Files---")
-
-        instructions = logic.organize_files(data)
-
-        if not instructions:
-            print("No files to organize.")
-        else:
-
-            data.save_files(instructions)
-            print(f"Successfully organized {len(instructions)} files!")
-
-    elif func == 3:
-
-        print("\n---Duplicate files---")
-
-        duplicates = logic.find_duplicate(data)
-
-        if not duplicates:
-            print("No duplicates found!")
-        else:
-            print(duplicates)
+    if file_data is None:
+        raise HTTPException(status_code= 400, detail = "Invalid directory path.")
+    return logic.inspect_files(file_data)
 
 
-    else:
-        print("GoodBye and GodSpeed.")
-        break
+@app.put("/organize")
+def organize_files(req: OrganizerRequest):
+   
+    file_data = data.load_files(req.path)
+    if file_data is None:
+       raise HTTPException(status_code = 400, detail = "Invalid directory path.")
 
-    
+    instructions = logic.organize_files(file_data, req.path)
+    if instructions:
+       data.save_files(instructions)
+    return {"message": f"Successfully organized {len(instructions)} files!", "instructions": instructions}
+
+@app.get("/duplicates")
+def find_duplicates(path: str):
+   file_data = data.load_files(path)
+   if file_data is None:
+       raise HTTPException(status_code = 400, detail = "Invalid directory path")
+
+   return logic.find_duplicate(file_data)
+
+
+   
+
+
+  
